@@ -137,7 +137,7 @@
             }
 
             if (synth.pending || synth.speaking || synth.paused) {
-                synth.cancel(); // Clear queue to avoid overlap
+                synth.cancel();
                 console.log("Speech queue cleared");
             }
 
@@ -180,8 +180,10 @@
                 };
 
                 console.log("Attempting to speak:", text, "with voice:", utterance.voice.name);
-                synth.speak(utterance);
-                console.log("Speak command issued, pending:", synth.pending, "speaking:", synth.speaking);
+                setTimeout(() => {
+                    synth.speak(utterance);
+                    console.log("Speak command issued, pending:", synth.pending, "speaking:", synth.speaking);
+                }, 100); // Slight delay to ensure events bind
             } else if (synth.speaking && !synth.paused) {
                 // Pause
                 synth.pause();
