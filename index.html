@@ -183,8 +183,8 @@
                 // Pause
                 synth.pause();
                 console.log("Pause triggered");
-            } else if (synth.paused) {
-                // Resume
+            } else if (synth.paused && utterance) {
+                // Resume only if utterance exists
                 synth.resume();
                 console.log("Resume triggered");
             }
@@ -195,6 +195,7 @@
             console.log("Stop clicked, speaking:", synth.speaking, "paused:", synth.paused);
             if (synth.speaking || synth.paused || synth.pending) {
                 synth.cancel();
+                synth.cancel(); // Double reset to force clear paused
                 status.textContent = "Stopped";
                 toggleBtn.textContent = "Play";
                 stopBtn.disabled = true;
