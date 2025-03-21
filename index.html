@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic TTS Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 10px;
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+            padding: 5px;
+            font-size: 16px;
+        }
+        select, button {
+            padding: 8px;
+            font-size: 14px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h2>Text-to-Speech Tool</h2>
+    <textarea id="textInput" placeholder="Type or paste your text here..."></textarea><br>
+    <select id="voiceSelect"></select><br>
+    <button onclick="speak()">Speak</button>
+
+    <script>
+        const synth = window.speechSynthesis;
+        const textInput = document.getElementById('textInput');
+        const voiceSelect = document.getElementById('voiceSelect');
+
+        // Populate voice dropdown
+        function loadVoices() {
+            const voices = synth.getVoices();
+            voiceSelect.innerHTML = voices
+                .map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`)
+                .join('');
+        }
+
+        // Load voices initially and handle async loading in some browsers
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        // Speak function
+        function speak() {
+            const text = textInput.value.trim();
+            if (!text) {
+                alert("Please enter some text!");
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            const selectedVoiceIndex = voiceSelect.value;
+            utterance.voice = synth.getVoices()[selectedVoiceIndex];
+            synth.speak(utterance);
+        }
+    </script>
+</body>
+</html>
