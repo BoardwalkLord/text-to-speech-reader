@@ -105,13 +105,17 @@
             voiceSelect.innerHTML = voices.length
                 ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
                 : '<option value="0">No voices available</option>';
-            status.textContent = voices.length ? "Ready" : "No voices available";
+            status.textContent = voices.length ? "Ready" : "No voices available. Check browser support.";
+            console.log("Voices loaded:", voices.length, voices.map(v => v.name));
         }
 
         // Load voices and handle async loading
         loadVoices();
         if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = loadVoices;
+            speechSynthesis.onvoiceschanged = () => {
+                loadVoices();
+                console.log("Voices changed event fired");
+            };
         }
 
         // Update slider values
@@ -121,7 +125,7 @@
 
         // Toggle play/pause/resume
         function toggleSpeech() {
-            alert("Button clicked!"); // Debug: Confirm click registers
+            console.log("Toggle clicked");
             const text = textInput.value.trim();
             if (!text) {
                 alert("Please enter some text!");
@@ -131,6 +135,7 @@
             const voices = synth.getVoices();
             if (!voices.length) {
                 status.textContent = "No voices available. Check browser support.";
+                console.log("No voices available");
                 return;
             }
 
@@ -146,27 +151,33 @@
                     status.textContent = "Speaking...";
                     toggleBtn.textContent = "Pause";
                     stopBtn.disabled = false;
+                    console.log("Speech started");
                 };
                 utterance.onend = () => {
                     status.textContent = "Finished";
                     toggleBtn.textContent = "Play";
                     stopBtn.disabled = true;
                     utterance = null;
+                    console.log("Speech ended");
                 };
                 utterance.onpause = () => {
                     status.textContent = "Paused";
                     toggleBtn.textContent = "Resume";
+                    console.log("Speech paused");
                 };
                 utterance.onresume = () => {
                     status.textContent = "Speaking...";
                     toggleBtn.textContent = "Pause";
+                    console.log("Speech resumed");
                 };
                 utterance.onerror = (e) => {
                     status.textContent = "Error: " + e.error;
                     toggleBtn.textContent = "Play";
                     stopBtn.disabled = true;
+                    console.log("Speech error:", e.error);
                 };
 
+                console.log("Attempting to speak:", text, "with voice:", utterance.voice.name);
                 synth.speak(utterance);
             } else if (synth.speaking && !synth.paused) {
                 // Pause
@@ -185,10 +196,11 @@
                 toggleBtn.textContent = "Play";
                 stopBtn.disabled = true;
                 utterance = null;
+                console.log("Speech stopped");
             }
         }
 
-        // Bind event listener explicitly
+        // Bind event listener
         toggleBtn.addEventListener('click', toggleSpeech);
     </script>
 </body>
