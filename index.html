@@ -82,7 +82,7 @@
             <span id="volumeValue">1</span>
         </div>
     </div>
-    <div id="status">Ready</div>
+    <div id="status">Loading voices...</div>
 
     <script>
         const synth = window.speechSynthesis;
@@ -103,16 +103,19 @@
         function loadVoices() {
             const voices = synth.getVoices();
             if (voices.length === 0) {
-                status.textContent = "No voices available. Check browser support.";
-                toggleBtn.disabled = true;
+                status.textContent = "No voices loaded yet...";
+                setTimeout(loadVoices, 100); // Retry if voices aren't ready
                 return;
             }
             voiceSelect.innerHTML = voices
                 .map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`)
                 .join('');
+            status.textContent = "Ready";
+            toggleBtn.disabled = false; // Ensure button is enabled once voices load
         }
 
         // Load voices and handle async loading
+        toggleBtn.disabled = false; // Start with button enabled
         loadVoices();
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = loadVoices;
@@ -131,12 +134,16 @@
                 return;
             }
 
-            console.log("Toggle button clicked. Speaking:", synth.speaking, "Paused:", synth.paused);
+            const voices = synth.getVoices();
+            if (voices.length === 0) {
+                status.textContent = "No voices available. Check browser support.";
+                return;
+            }
 
             if (!synth.speaking && !synth.paused) {
                 // Play: Start new speech
                 utterance = new SpeechSynthesisUtterance(text);
-                utterance.voice = synth.getVoices()[voiceSelect.value];
+                utterance.voice = voices[voiceSelect.value];
                 utterance.rate = parseFloat(rate.value);
                 utterance.pitch = parseFloat(pitch.value);
                 utterance.volume = parseFloat(volume.value);
