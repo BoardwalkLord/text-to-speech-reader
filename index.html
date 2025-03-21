@@ -179,14 +179,6 @@
                 console.log("Attempting to speak:", text, "with voice:", utterance.voice.name);
                 synth.speak(utterance);
                 console.log("Speak command issued, pending:", synth.pending, "speaking:", synth.speaking);
-                // Fallback check
-                setTimeout(() => {
-                    if (synth.speaking && !status.textContent.includes("Speaking")) {
-                        console.log("Speech stalled, forcing restart");
-                        synth.cancel();
-                        synth.speak(utterance);
-                    }
-                }, 1000);
             } else if (synth.speaking && !synth.paused) {
                 // Pause
                 synth.pause();
@@ -208,6 +200,14 @@
                 stopBtn.disabled = true;
                 utterance = null;
                 console.log("Speech stopped");
+                // Extra reset check
+                setTimeout(() => {
+                    console.log("Post-stop check, speaking:", synth.speaking, "paused:", synth.paused);
+                    if (synth.speaking || synth.paused) {
+                        synth.cancel();
+                        console.log("Forced extra reset");
+                    }
+                }, 100);
             }
         }
 
