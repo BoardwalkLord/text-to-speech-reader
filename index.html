@@ -138,7 +138,8 @@
 
             if (!synth.speaking && !synth.paused) {
                 // Play
-                if (synth.pending) synth.cancel(); // Clear any queued speech
+                synth.cancel(); // Force reset
+                console.log("Speech synthesis reset");
                 utterance = new SpeechSynthesisUtterance(text);
                 utterance.voice = voices[voiceSelect.value];
                 utterance.rate = parseFloat(rate.value);
@@ -178,6 +179,7 @@
                 console.log("Attempting to speak:", text, "with voice:", utterance.voice.name);
                 synth.speak(utterance);
                 console.log("Speak command issued, pending:", synth.pending, "speaking:", synth.speaking);
+                setTimeout(() => console.log("Post-speak check, speaking:", synth.speaking), 500); // Debug delay
             } else if (synth.speaking && !synth.paused) {
                 // Pause
                 synth.pause();
