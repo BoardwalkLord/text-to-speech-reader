@@ -136,8 +136,8 @@
                 return;
             }
 
-            // Play (force reset if paused lingers)
-            if (!synth.speaking || synth.paused) {
+            if (!synth.speaking && !synth.paused) {
+                // Play
                 synth.cancel(); // Full reset
                 console.log("Speech synthesis reset");
                 utterance = new SpeechSynthesisUtterance(text);
@@ -183,6 +183,10 @@
                 // Pause
                 synth.pause();
                 console.log("Pause triggered");
+            } else if (synth.paused) {
+                // Resume
+                synth.resume();
+                console.log("Resume triggered");
             }
         }
 
@@ -196,7 +200,6 @@
                 stopBtn.disabled = true;
                 utterance = null;
                 console.log("Speech stopped");
-                // Double-check reset
                 setTimeout(() => {
                     console.log("Post-stop check, speaking:", synth.speaking, "paused:", synth.paused);
                     if (synth.speaking || synth.paused) {
