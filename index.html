@@ -122,7 +122,7 @@
 
         // Toggle play/pause/resume
         function toggleSpeech() {
-            console.log("Toggle clicked, speaking:", synth.speaking, "paused:", synth.paused);
+            console.log("Toggle clicked, speaking:", synth.speaking, "paused:", synth.paused, "utterance:", !!utterance);
             const text = textInput.value.trim();
             if (!text) {
                 alert("Please enter some text!");
@@ -136,9 +136,9 @@
                 return;
             }
 
-            if (!synth.speaking && !synth.paused) {
-                // Play
-                synth.cancel(); // Full reset
+            if (!synth.speaking && (!synth.paused || !utterance)) {
+                // Play (force reset if no active utterance)
+                synth.cancel();
                 console.log("Speech synthesis reset");
                 utterance = new SpeechSynthesisUtterance(text);
                 utterance.voice = voices[voiceSelect.value];
@@ -184,7 +184,7 @@
                 synth.pause();
                 console.log("Pause triggered");
             } else if (synth.paused && utterance) {
-                // Resume only if utterance exists
+                // Resume
                 synth.resume();
                 console.log("Resume triggered");
             }
@@ -195,7 +195,7 @@
             console.log("Stop clicked, speaking:", synth.speaking, "paused:", synth.paused);
             if (synth.speaking || synth.paused || synth.pending) {
                 synth.cancel();
-                synth.cancel(); // Double reset to force clear paused
+                synth.cancel(); // Double reset
                 status.textContent = "Stopped";
                 toggleBtn.textContent = "Play";
                 stopBtn.disabled = true;
