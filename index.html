@@ -62,8 +62,8 @@
     <textarea id="textInput" placeholder="Type or paste your text here..."></textarea><br>
     <select id="voiceSelect"></select><br>
     <div class="controls">
-        <button id="toggleBtn" onclick="toggleSpeech()">Play</button>
-        <button id="stopBtn" onclick="stop()" disabled>Stop</button>
+        <button id="toggleBtn">Play</button>
+        <button id="stopBtn" disabled>Stop</button>
     </div>
     <div class="controls">
         <div class="slider-container">
@@ -102,32 +102,26 @@
         // Populate voice dropdown
         function loadVoices() {
             const voices = synth.getVoices();
-            if (voices.length === 0) {
-                status.textContent = "No voices loaded yet...";
-                setTimeout(loadVoices, 100); // Retry if voices aren't ready
-                return;
-            }
-            voiceSelect.innerHTML = voices
-                .map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`)
-                .join('');
-            status.textContent = "Ready";
-            toggleBtn.disabled = false; // Ensure button is enabled once voices load
+            voiceSelect.innerHTML = voices.length
+                ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
+                : '<option value="0">No voices available</option>';
+            status.textContent = voices.length ? "Ready" : "No voices available";
         }
 
         // Load voices and handle async loading
-        toggleBtn.disabled = false; // Start with button enabled
         loadVoices();
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = loadVoices;
         }
 
-        // Update slider values in real-time
+        // Update slider values
         rate.oninput = () => rateValue.textContent = rate.value;
         pitch.oninput = () => pitchValue.textContent = pitch.value;
         volume.oninput = () => volumeValue.textContent = volume.value;
 
-        // Toggle between play, pause, and resume
+        // Toggle play/pause/resume
         function toggleSpeech() {
+            alert("Button clicked!"); // Debug: Confirm click registers
             const text = textInput.value.trim();
             if (!text) {
                 alert("Please enter some text!");
@@ -135,13 +129,13 @@
             }
 
             const voices = synth.getVoices();
-            if (voices.length === 0) {
+            if (!voices.length) {
                 status.textContent = "No voices available. Check browser support.";
                 return;
             }
 
             if (!synth.speaking && !synth.paused) {
-                // Play: Start new speech
+                // Play
                 utterance = new SpeechSynthesisUtterance(text);
                 utterance.voice = voices[voiceSelect.value];
                 utterance.rate = parseFloat(rate.value);
@@ -175,10 +169,10 @@
 
                 synth.speak(utterance);
             } else if (synth.speaking && !synth.paused) {
-                // Pause: Pause current speech
+                // Pause
                 synth.pause();
             } else if (synth.paused) {
-                // Resume: Resume paused speech
+                // Resume
                 synth.resume();
             }
         }
@@ -193,6 +187,9 @@
                 utterance = null;
             }
         }
+
+        // Bind event listener explicitly
+        toggleBtn.addEventListener('click', toggleSpeech);
     </script>
 </body>
 </html>
