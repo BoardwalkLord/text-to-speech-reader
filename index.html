@@ -105,7 +105,7 @@
             voiceSelect.innerHTML = voices.length
                 ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
                 : '<option value="0">No voices available</option>';
-            status.textContent = voices.length ? "Ready" : "No voices available. Check browser support  support.";
+            status.textContent = voices.length ? "Ready" : "No voices available. Check browser support.";
             console.log("Voices loaded:", voices.length, voices.map(v => v.name));
         }
 
@@ -136,7 +136,12 @@
                 return;
             }
 
-            if (!synth.speaking && !synth.paused) {
+            if (synth.pending || synth.speaking || synth.paused) {
+                synth.cancel(); // Clear queue to avoid overlap
+                console.log("Speech queue cleared");
+            }
+
+            if (!utterance || (!synth.speaking && !synth.paused)) {
                 // Play
                 utterance = new SpeechSynthesisUtterance(text);
                 utterance.voice = voices[voiceSelect.value];
@@ -176,6 +181,7 @@
 
                 console.log("Attempting to speak:", text, "with voice:", utterance.voice.name);
                 synth.speak(utterance);
+                console.log("Speak command issued, pending:", synth.pending, "speaking:", synth.speaking);
             } else if (synth.speaking && !synth.paused) {
                 // Pause
                 synth.pause();
@@ -187,7 +193,7 @@
 
         // Stop speech
         function stop() {
-            if (synth.speaking || synth.paused) {
+            if (synth.speaking || synth.paused || synth.pending) {
                 synth.cancel();
                 status.textContent = "Stopped";
                 toggleBtn.textContent = "Play";
