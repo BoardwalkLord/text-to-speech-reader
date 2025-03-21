@@ -107,15 +107,23 @@
                 : '<option value="0">No voices available</option>';
             status.textContent = voices.length ? "Ready" : "No voices available. Check browser support.";
             console.log("Voices loaded:", voices.length, voices.map(v => v.name));
+            if (voices.length) testSpeech(); // Test TTS on load
+        }
+
+        // Test TTS engine
+        function testSpeech() {
+            const testUtterance = new SpeechSynthesisUtterance("Testing speech synthesis");
+            testUtterance.volume = 0; // Silent test
+            testUtterance.onstart = () => console.log("Test speech started");
+            testUtterance.onend = () => console.log("Test speech ended");
+            testUtterance.onerror = (e) => console.log("Test speech error:", e.error);
+            synth.speak(testUtterance);
         }
 
         // Load voices and handle async loading
         loadVoices();
         if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = () => {
-                loadVoices();
-                console.log("Voices changed event fired");
-            };
+            speechSynthesis.onvoiceschanged = loadVoices;
         }
 
         // Update slider values
