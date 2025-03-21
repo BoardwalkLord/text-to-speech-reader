@@ -122,7 +122,7 @@
 
         // Toggle play/pause/resume
         function toggleSpeech() {
-            console.log("Toggle clicked");
+            console.log("Toggle clicked, speaking:", synth.speaking, "paused:", synth.paused);
             const text = textInput.value.trim();
             if (!text) {
                 alert("Please enter some text!");
@@ -136,13 +136,9 @@
                 return;
             }
 
-            if (synth.pending || synth.speaking || synth.paused) {
-                synth.cancel();
-                console.log("Speech queue cleared");
-            }
-
-            if (!utterance || (!synth.speaking && !synth.paused)) {
+            if (!synth.speaking && !synth.paused) {
                 // Play
+                if (synth.pending) synth.cancel(); // Clear any queued speech
                 utterance = new SpeechSynthesisUtterance(text);
                 utterance.voice = voices[voiceSelect.value];
                 utterance.rate = parseFloat(rate.value);
@@ -185,14 +181,17 @@
             } else if (synth.speaking && !synth.paused) {
                 // Pause
                 synth.pause();
+                console.log("Pause triggered");
             } else if (synth.paused) {
                 // Resume
                 synth.resume();
+                console.log("Resume triggered");
             }
         }
 
         // Stop speech
         function stop() {
+            console.log("Stop clicked, speaking:", synth.speaking, "paused:", synth.paused);
             if (synth.speaking || synth.paused || synth.pending) {
                 synth.cancel();
                 status.textContent = "Stopped";
@@ -203,8 +202,9 @@
             }
         }
 
-        // Bind event listener
+        // Bind event listeners
         toggleBtn.addEventListener('click', toggleSpeech);
+        stopBtn.addEventListener('click', stop);
     </script>
 </body>
 </html>
