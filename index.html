@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TTS Tool with Toggle Button</title>
+    <title>Text-to-Speech Tool</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -82,7 +82,7 @@
             <span id="volumeValue">1</span>
         </div>
     </div>
-    <div id="status">Loading voices...</div>
+    <div id="status">Ready</div>
 
     <script>
         const synth = window.speechSynthesis;
@@ -99,30 +99,24 @@
         const status = document.getElementById('status');
         let utterance = null;
 
-        // Populate voice dropdown
         function loadVoices() {
             const voices = synth.getVoices();
             voiceSelect.innerHTML = voices.length
                 ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
                 : '<option value="0">No voices available</option>';
-            status.textContent = voices.length ? "Ready" : "No voices available. Check browser support.";
-            console.log("Voices loaded:", voices.length, voices.map(v => v.name));
+            status.textContent = voices.length ? "Ready" : "No voices available";
         }
 
-        // Load voices and handle async loading
         loadVoices();
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = loadVoices;
         }
 
-        // Update slider values
         rate.oninput = () => rateValue.textContent = rate.value;
         pitch.oninput = () => pitchValue.textContent = pitch.value;
         volume.oninput = () => volumeValue.textContent = volume.value;
 
-        // Toggle play/pause/resume
         function toggleSpeech() {
-            console.log("Toggle clicked, speaking:", synth.speaking, "paused:", synth.paused, "utterance:", !!utterance);
             const text = textInput.value.trim();
             if (!text) {
                 alert("Please enter some text!");
@@ -131,15 +125,12 @@
 
             const voices = synth.getVoices();
             if (!voices.length) {
-                status.textContent = "No voices available. Check browser support.";
-                console.log("No voices available");
+                status.textContent = "No voices available";
                 return;
             }
 
             if (!synth.speaking && (!synth.paused || !utterance)) {
-                // Play (force reset if no active utterance)
                 synth.cancel();
-                console.log("Speech synthesis reset");
                 utterance = new SpeechSynthesisUtterance(text);
                 utterance.voice = voices[voiceSelect.value];
                 utterance.rate = parseFloat(rate.value);
@@ -150,49 +141,36 @@
                     status.textContent = "Speaking...";
                     toggleBtn.textContent = "Pause";
                     stopBtn.disabled = false;
-                    console.log("Speech started");
                 };
                 utterance.onend = () => {
                     status.textContent = "Finished";
                     toggleBtn.textContent = "Play";
                     stopBtn.disabled = true;
                     utterance = null;
-                    console.log("Speech ended");
                 };
                 utterance.onpause = () => {
                     status.textContent = "Paused";
                     toggleBtn.textContent = "Resume";
-                    console.log("Speech paused");
                 };
                 utterance.onresume = () => {
                     status.textContent = "Speaking...";
                     toggleBtn.textContent = "Pause";
-                    console.log("Speech resumed");
                 };
                 utterance.onerror = (e) => {
                     status.textContent = "Error: " + e.error;
                     toggleBtn.textContent = "Play";
                     stopBtn.disabled = true;
-                    console.log("Speech error:", e.error);
                 };
 
-                console.log("Attempting to speak:", text, "with voice:", utterance.voice.name);
                 synth.speak(utterance);
-                console.log("Speak command issued, pending:", synth.pending, "speaking:", synth.speaking);
             } else if (synth.speaking && !synth.paused) {
-                // Pause
                 synth.pause();
-                console.log("Pause triggered");
             } else if (synth.paused && utterance) {
-                // Resume
                 synth.resume();
-                console.log("Resume triggered");
             }
         }
 
-        // Stop speech
         function stop() {
-            console.log("Stop clicked, speaking:", synth.speaking, "paused:", synth.paused);
             if (synth.speaking || synth.paused || synth.pending) {
                 synth.cancel();
                 synth.cancel(); // Double reset
@@ -200,18 +178,12 @@
                 toggleBtn.textContent = "Play";
                 stopBtn.disabled = true;
                 utterance = null;
-                console.log("Speech stopped");
                 setTimeout(() => {
-                    console.log("Post-stop check, speaking:", synth.speaking, "paused:", synth.paused);
-                    if (synth.speaking || synth.paused) {
-                        synth.cancel();
-                        console.log("Forced extra reset");
-                    }
+                    if (synth.speaking || synth.paused) synth.cancel();
                 }, 100);
             }
         }
 
-        // Bind event listeners
         toggleBtn.addEventListener('click', toggleSpeech);
         stopBtn.addEventListener('click', stop);
     </script>
