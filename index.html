@@ -41,22 +41,20 @@
             border-color: #3498db;
             outline: none;
         }
+        .voice-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
         select {
-            width: 100%;
+            flex: 1;
             padding: 10px;
             font-size: 16px;
             border: 2px solid #ddd;
             border-radius: 8px;
             background: #fafafa;
-            margin: 10px 0;
             cursor: pointer;
-        }
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin: 15px 0;
         }
         button {
             padding: 12px 25px;
@@ -74,6 +72,10 @@
         button#stopBtn {
             background: #e74c3c;
         }
+        button#testVoiceBtn {
+            background: #9b59b6;
+            padding: 10px 20px;
+        }
         button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -84,6 +86,13 @@
         button:disabled {
             background: #bdc3c7;
             cursor: not-allowed;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
         }
         .sliders {
             display: grid;
@@ -143,7 +152,10 @@
     <div class="container">
         <h2>Text-to-Speech Tool</h2>
         <textarea id="textInput" placeholder="Type or paste your text here..."></textarea>
-        <select id="voiceSelect"></select>
+        <div class="voice-controls">
+            <select id="voiceSelect"></select>
+            <button id="testVoiceBtn">Test Voice</button>
+        </div>
         <div class="controls">
             <button id="toggleBtn">Play</button>
             <button id="stopBtn" disabled>Stop</button>
@@ -190,6 +202,7 @@
         const voiceSelect = document.getElementById('voiceSelect');
         const toggleBtn = document.getElementById('toggleBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const testVoiceBtn = document.getElementById('testVoiceBtn');
         const rate = document.getElementById('rate');
         const pitch = document.getElementById('pitch');
         const volume = document.getElementById('volume');
@@ -218,11 +231,30 @@
                 ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
                 : '<option value="0">No voices available</option>';
             status.textContent = voices.length ? "Ready" : "No voices available";
+            console.log("Available voices:", voices.map(v => `${v.name} (${v.lang})`));
         }
 
         function loadPoem(index) {
             textInput.value = poems[index - 1];
             status.textContent = "Poem " + index + " loaded";
+        }
+
+        function testVoice() {
+            const voices = synth.getVoices();
+            if (!voices.length) {
+                status.textContent = "No voices available";
+                return;
+            }
+            synth.cancel();
+            const testUtterance = new SpeechSynthesisUtterance("Hello, this is a test of my voice!");
+            testUtterance.voice = voices[voiceSelect.value];
+            testUtterance.rate = parseFloat(rate.value);
+            testUtterance.pitch = parseFloat(pitch.value);
+            testUtterance.volume = parseFloat(volume.value);
+            testUtterance.onstart = () => status.textContent = "Testing voice...";
+            testUtterance.onend = () => status.textContent = "Ready";
+            testUtterance.onerror = (e) => status.textContent = "Error: " + e.error;
+            synth.speak(testUtterance);
         }
 
         loadVoices();
@@ -304,6 +336,7 @@
 
         toggleBtn.addEventListener('click', toggleSpeech);
         stopBtn.addEventListener('click', stop);
+        testVoiceBtn.addEventListener('click', testVoice);
     </script>
 </body>
 </html>
