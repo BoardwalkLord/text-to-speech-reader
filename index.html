@@ -35,20 +35,26 @@
         }
         .light .container, .light .poem-container { background: #fff; }
         .dark .container, .dark .poem-container { background: #34495e; }
-        textarea {
+        #textDisplay {
             width: 100%;
             height: 150px;
             padding: 12px;
             font-size: 16px;
             border: 2px solid #ddd;
             border-radius: 8px;
-            resize: vertical;
             box-sizing: border-box;
+            overflow-y: auto;
+            white-space: pre-wrap;
             transition: border-color 0.3s;
         }
-        .light textarea { background: #fff; color: #2c3e50; }
-        .dark textarea { background: #2c3e50; color: #ecf0f1; border-color: #7f8c8d; }
-        textarea:focus { border-color: #3498db; outline: none; }
+        .light #textDisplay { background: #fff; color: #2c3e50; }
+        .dark #textDisplay { background: #2c3e50; color: #ecf0f1; border-color: #7f8c8d; }
+        #textDisplay:focus { border-color: #3498db; outline: none; }
+        .highlight {
+            background-color: #f1c40f;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
         .voice-controls {
             display: flex;
             align-items: center;
@@ -203,7 +209,7 @@
     </div>
     <div class="container">
         <h2>Text-to-Speech Tool</h2>
-        <textarea id="textInput" placeholder="Type or paste your text here..."></textarea>
+        <div id="textDisplay" contenteditable="true" placeholder="Type or paste your text here..."></div>
         <div class="voice-controls">
             <select id="voiceSelect"></select>
             <button id="testVoiceBtn">Test Voice</button>
@@ -250,7 +256,7 @@
 
     <script>
         const synth = window.speechSynthesis;
-        const textInput = document.getElementById('textInput');
+        const textDisplay = document.getElementById('textDisplay');
         const voiceSelect = document.getElementById('voiceSelect');
         const toggleBtn = document.getElementById('toggleBtn');
         const stopBtn = document.getElementById('stopBtn');
@@ -287,7 +293,7 @@
         }
 
         function loadPoem(index) {
-            textInput.value = poems[index - 1];
+            textDisplay.textContent = poems[index - 1];
             status.textContent = "Poem " + index + " loaded";
         }
 
@@ -314,6 +320,28 @@
             document.body.classList.toggle('dark');
         }
 
+        function highlightWord(charIndex) {
+            const text = textDisplay.textContent;
+            const words = text.split(/(\s+)/); // Split by whitespace, preserve spaces
+            let currentPos = 0;
+
+            // Clear previous highlights
+            textDisplay.innerHTML = '';
+
+            for (let i = 0; i < words.length; i++) {
+                const word = words[i];
+                const wordStart = currentPos;
+                const wordEnd = wordStart + word.length;
+
+                if (charIndex >= wordStart && charIndex < wordEnd && !word.match(/^\s+$/)) {
+                    textDisplay.innerHTML += `<span class="highlight">${word}</span>`;
+                } else {
+                    textDisplay.innerHTML += word;
+                }
+                currentPos += word.length;
+            }
+        }
+
         loadVoices();
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = loadVoices;
@@ -324,7 +352,7 @@
         volume.oninput = () => volumeValue.textContent = volume.value;
 
         function toggleSpeech() {
-            const text = textInput.value.trim();
+            const text = textDisplay.textContent.trim();
             if (!text) {
                 alert("Please enter some text!");
                 return;
@@ -353,6 +381,7 @@
                     status.textContent = "Finished";
                     toggleBtn.textContent = "Play";
                     stopBtn.disabled = true;
+                    textDisplay.innerHTML = textDisplay.textContent; // Reset highlights
                     utterance = null;
                 };
                 utterance.onpause = () => {
@@ -362,6 +391,11 @@
                 utterance.onresume = () => {
                     status.textContent = "Speaking...";
                     toggleBtn.textContent = "Pause";
+                };
+                utterance.onboundary = (event) => {
+                    if (event.name === 'word') {
+                        highlightWord(event.charIndex);
+                    }
                 };
                 utterance.onerror = (e) => {
                     status.textContent = "Error: " + e.error;
@@ -384,6 +418,7 @@
                 status.textContent = "Stopped";
                 toggleBtn.textContent = "Play";
                 stopBtn.disabled = true;
+                textDisplay.innerHTML = textDisplay.textContent; // Reset highlights
                 utterance = null;
                 setTimeout(() => {
                     if (synth.speaking || synth.paused) synth.cancel();
@@ -395,6 +430,9 @@
         stopBtn.addEventListener('click', stop);
         testVoiceBtn.addEventListener('click', testVoice);
         themeToggle.addEventListener('change', toggleTheme);
+        textDisplay.addEventListener('input', () => {
+            if (!synth.speaking) textDisplay.innerHTML = textDisplay.textContent;
+        });
     </script>
 </body>
 </html>
