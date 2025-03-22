@@ -345,23 +345,17 @@
             // Scroll to highlighted word
             const highlightSpan = textDisplay.querySelector('.highlight');
             if (highlightSpan) {
-                const spanRect = highlightSpan.getBoundingClientRect();
-                const containerRect = textDisplay.getBoundingClientRect();
-                const spanBottom = highlightSpan.offsetTop + highlightSpan.offsetHeight;
-                const visibleBottom = textDisplay.scrollTop + textDisplay.clientHeight;
+                const contentHeight = textDisplay.scrollHeight;
+                const containerHeight = textDisplay.clientHeight;
+                const highlightBottom = highlightSpan.offsetTop + highlightSpan.offsetHeight;
+                const threshold = contentHeight - containerHeight * 0.5; // Switch when near bottom half
 
-                if (spanBottom > visibleBottom) {
-                    // Scroll to keep the bottom of the highlighted word visible
-                    textDisplay.scrollTo({
-                        top: spanBottom - textDisplay.clientHeight + 12, // Adjust for padding
-                        behavior: 'smooth'
-                    });
-                } else if (highlightSpan.offsetTop < textDisplay.scrollTop) {
-                    // Scroll to top if above visible area
-                    textDisplay.scrollTo({
-                        top: highlightSpan.offsetTop - 12, // Adjust for padding
-                        behavior: 'smooth'
-                    });
+                if (highlightBottom > threshold && contentHeight > containerHeight) {
+                    highlightSpan.scrollIntoView({ block: 'end', behavior: 'smooth' });
+                    textDisplay.scrollTop += 12; // Buffer from bottom
+                } else {
+                    highlightSpan.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                    textDisplay.scrollTop -= 12; // Buffer from top
                 }
             }
         }
