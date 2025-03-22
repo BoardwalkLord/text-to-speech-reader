@@ -326,7 +326,7 @@
             const words = text.split(/(\s+)/); // Split by whitespace, preserve spaces
             let currentPos = 0;
 
-            textDisplay.innerHTML = '';
+            textDisplay.innerHTML = ''; // Update DOM first
             for (let i = 0; i < words.length; i++) {
                 const word = words[i];
                 const wordStart = currentPos;
@@ -342,6 +342,7 @@
 
             const highlightSpan = textDisplay.querySelector('.highlight');
             if (highlightSpan) {
+                // Measure after DOM update
                 const contentHeight = textDisplay.scrollHeight;
                 const containerHeight = textDisplay.clientHeight;
                 const highlightTop = highlightSpan.offsetTop;
