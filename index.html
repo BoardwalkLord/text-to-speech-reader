@@ -271,6 +271,7 @@
         const volumeValue = document.getElementById('volumeValue');
         const status = document.getElementById('status');
         let utterance = null;
+        let voices = [];
 
         const poems = [
             "There once was a man from Peru.\nWho dreamed he was eating his shoe.\nHe woke up at night.\nWith a terrible fright.\nTo find out his dream had come true!",
@@ -286,12 +287,11 @@
         ];
 
         function loadVoices() {
-            const voices = synth.getVoices();
+            voices = synth.getVoices();
             voiceSelect.innerHTML = voices.length
                 ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
                 : '<option value="0">No voices available</option>';
             status.textContent = voices.length ? "Voices loaded" : "No voices available";
-            return voices;
         }
 
         function loadPoem(index) {
@@ -300,7 +300,6 @@
         }
 
         function testVoice() {
-            const voices = loadVoices();
             if (!voices.length) {
                 status.textContent = "No voices available";
                 return;
@@ -349,9 +348,13 @@
                 const highlightBottom = highlightTop + highlightSpan.offsetHeight;
                 const scrollMax = contentHeight - containerHeight;
 
-                let scrollOffset = highlightTop - 12; // Default: keep near top with buffer
-                if (highlightBottom > contentHeight - containerHeight / 2 && contentHeight > containerHeight) {
+                let scrollOffset;
+                if (contentHeight <= containerHeight) {
+                    scrollOffset = 0; // No scroll if content fits
+                } else if (highlightBottom > contentHeight - containerHeight / 2) {
                     scrollOffset = contentHeight - containerHeight; // Pin to bottom near end
+                } else {
+                    scrollOffset = highlightTop - (containerHeight / 2) + (highlightSpan.offsetHeight / 2); // Center word
                 }
 
                 scrollOffset = Math.max(0, Math.min(scrollOffset, scrollMax));
@@ -365,7 +368,7 @@
 
         function initVoices() {
             loadVoices();
-            if (!synth.getVoices().length && speechSynthesis.onvoiceschanged !== undefined) {
+            if (!voices.length && speechSynthesis.onvoiceschanged !== undefined) {
                 speechSynthesis.onvoiceschanged = loadVoices;
                 setTimeout(loadVoices, 1000);
             }
@@ -383,7 +386,6 @@
                 return;
             }
 
-            const voices = synth.getVoices();
             if (!voices.length) {
                 status.textContent = "No voices available";
                 return;
