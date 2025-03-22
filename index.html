@@ -24,6 +24,7 @@
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
         textarea {
             width: 100%;
@@ -118,6 +119,24 @@
             margin-top: 15px;
             font-style: italic;
         }
+        .poem-container {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .poem-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .poem-btn {
+            background: #3498db;
+            padding: 10px 15px;
+            min-width: 40px;
+        }
     </style>
 </head>
 <body>
@@ -149,6 +168,22 @@
         <div id="status">Ready</div>
     </div>
 
+    <div class="poem-container">
+        <h2>Click to read funny poems (courtesy of <a href="https://pun.me/funny/poems/" target="_blank">pun.me</a>)</h2>
+        <div class="poem-buttons">
+            <button class="poem-btn" onclick="loadPoem(1)">1</button>
+            <button class="poem-btn" onclick="loadPoem(2)">2</button>
+            <button class="poem-btn" onclick="loadPoem(3)">3</button>
+            <button class="poem-btn" onclick="loadPoem(4)">4</button>
+            <button class="poem-btn" onclick="loadPoem(5)">5</button>
+            <button class="poem-btn" onclick="loadPoem(6)">6</button>
+            <button class="poem-btn" onclick="loadPoem(7)">7</button>
+            <button class="poem-btn" onclick="loadPoem(8)">8</button>
+            <button class="poem-btn" onclick="loadPoem(9)">9</button>
+            <button class="poem-btn" onclick="loadPoem(10)">10</button>
+        </div>
+    </div>
+
     <script>
         const synth = window.speechSynthesis;
         const textInput = document.getElementById('textInput');
@@ -164,12 +199,30 @@
         const status = document.getElementById('status');
         let utterance = null;
 
+        const poems = [
+            "There once was a man from Peru.\nWho dreamed he was eating his shoe.\nHe woke up at night.\nWith a terrible fright.\nTo find out his dream had come true!",
+            "Our school trip was a special occasion.\nBut we never reached our destination.\nInstead of the zoo.\nI was locked in the loo.\nOf the toilet at the service station!",
+            "An elderly man called Keith.\nMislaid his set of false teeth.\nThey'd been laid on a chair.\nHe'd forgot they were there.\nSat down, and was bitten beneath.",
+            "I eat my peas with honey.\nI've done it all my life.\nIt makes the peas taste funny.\nBut it keeps them on the knife!",
+            "She fell into the bath tub.\nShe fell into the sink.\nShe fell into the raspberry jam.\nAnd came out pink!",
+            "Roses are red.\nViolets are blue.\nGod made me pretty.\nWhat happened to you!",
+            "There was a young lady of Kent.\nWhose nose was most awfully bent.\nShe followed her nose,\nOne day, I suppose,\nAnd no one knows which way she went.",
+            "If I were a furry bear.\nAnd had a furry tummy.\nI'd climb into a honey jar\nAnd make my tummy yummy!",
+            "There once was a child in Spain.\nWho loved to play in the rain.\nOne day he tripped.\nAnd broke his hip.\nNow he is in serious pain.",
+            "Last night at dinner we had some fish,\nAnd though I tried, I did not finish.\nMy mother told me while I chewed,\nBrains loved fish over all other food."
+        ];
+
         function loadVoices() {
             const voices = synth.getVoices();
             voiceSelect.innerHTML = voices.length
                 ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
                 : '<option value="0">No voices available</option>';
             status.textContent = voices.length ? "Ready" : "No voices available";
+        }
+
+        function loadPoem(index) {
+            textInput.value = poems[index - 1];
+            status.textContent = "Poem " + index + " loaded";
         }
 
         loadVoices();
