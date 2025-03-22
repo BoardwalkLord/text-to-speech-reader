@@ -326,7 +326,7 @@
             const words = text.split(/(\s+)/); // Split by whitespace, preserve spaces
             let currentPos = 0;
 
-            textDisplay.innerHTML = ''; // Update DOM first
+            textDisplay.innerHTML = '';
             for (let i = 0; i < words.length; i++) {
                 const word = words[i];
                 const wordStart = currentPos;
@@ -338,30 +338,6 @@
                     textDisplay.innerHTML += word;
                 }
                 currentPos += word.length;
-            }
-
-            const highlightSpan = textDisplay.querySelector('.highlight');
-            if (highlightSpan) {
-                // Measure after DOM update
-                const contentHeight = textDisplay.scrollHeight;
-                const containerHeight = textDisplay.clientHeight;
-                const highlightTop = highlightSpan.offsetTop;
-                const highlightBottom = highlightTop + highlightSpan.offsetHeight;
-                const scrollMax = contentHeight - containerHeight;
-
-                let scrollOffset = highlightTop - 12; // Default: near top
-                if (contentHeight <= containerHeight) {
-                    scrollOffset = 0; // No scroll if fits
-                } else if (highlightBottom > contentHeight - containerHeight / 2) {
-                    scrollOffset = contentHeight - containerHeight; // Pin to bottom
-                }
-
-                scrollOffset = Math.max(0, Math.min(scrollOffset, scrollMax));
-                textDisplay.scrollTo({
-                    top: scrollOffset,
-                    behavior: 'smooth'
-                });
-                console.log('highlightTop:', highlightTop, 'scrollOffset:', scrollOffset, 'scrollTop:', textDisplay.scrollTop, 'contentHeight:', contentHeight, 'scrollMax:', scrollMax);
             }
         }
 
