@@ -290,9 +290,8 @@
             voiceSelect.innerHTML = voices.length
                 ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
                 : '<option value="0">No voices available</option>';
-            statusśred
-
-textContent = voices.length ? "Ready" : "No voices available";
+            status.textContent = voices.length ? "Voices loaded" : "No voices available";
+            return voices;
         }
 
         function loadPoem(index) {
@@ -301,7 +300,7 @@ textContent = voices.length ? "Ready" : "No voices available";
         }
 
         function testVoice() {
-            const voices = synth.getVoices();
+            const voices = loadVoices();
             if (!voices.length) {
                 status.textContent = "No voices available";
                 return;
@@ -328,9 +327,7 @@ textContent = voices.length ? "Ready" : "No voices available";
             const words = text.split(/(\s+)/); // Split by whitespace, preserve spaces
             let currentPos = 0;
 
-            // Clear previous highlights
             textDisplay.innerHTML = '';
-
             for (let i = 0; i < words.length; i++) {
                 const word = words[i];
                 const wordStart = currentPos;
@@ -344,24 +341,23 @@ textContent = voices.length ? "Ready" : "No voices available";
                 currentPos += word.length;
             }
 
-            // Scroll to highlighted word
             const highlightSpan = textDisplay.querySelector('.highlight');
             if (highlightSpan) {
+                console.log('highlightTop:', highlightTop, 'scrollOffset:', scrollOffset, 'scrollTop:', textDisplay.scrollTop); //kwcw
                 const contentHeight = textDisplay.scrollHeight;
                 const containerHeight = textDisplay.clientHeight;
                 const highlightTop = highlightSpan.offsetTop;
                 const highlightBottom = highlightTop + highlightSpan.offsetHeight;
                 const scrollMax = contentHeight - containerHeight;
 
-                // Keep word near top unless near end
-                let scrollOffset = highlightTop - 12; // Buffer from top
+                let scrollOffset = highlightTop; // Start at exact top position
                 if (highlightBottom > contentHeight - containerHeight / 2 && contentHeight > containerHeight) {
-                    scrollOffset = contentHeight - containerHeight; // Pin to bottom
+                    scrollOffset = contentHeight - containerHeight; // Pin to bottom near end
+                } else if (highlightTop > textDisplay.scrollTop + containerHeight - highlightSpan.offsetHeight) {
+                    scrollOffset = highlightTop - containerHeight + highlightSpan.offsetHeight + 12; // Keep in view if below
                 }
 
-                // Ensure scroll stays within bounds
                 scrollOffset = Math.max(0, Math.min(scrollOffset, scrollMax));
-
                 textDisplay.scrollTo({
                     top: scrollOffset,
                     behavior: 'smooth'
@@ -369,10 +365,14 @@ textContent = voices.length ? "Ready" : "No voices available";
             }
         }
 
-        loadVoices();
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = loadVoices;
+        function initVoices() {
+            loadVoices();
+            if (!synth.getVoices().length && speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+                setTimeout(loadVoices, 1000);
+            }
         }
+        initVoices();
 
         rate.oninput = () => rateValue.textContent = rate.value;
         pitch.oninput = () => pitchValue.textContent = pitch.value;
@@ -408,7 +408,7 @@ textContent = voices.length ? "Ready" : "No voices available";
                     status.textContent = "Finished";
                     toggleBtn.textContent = "Play";
                     stopBtn.disabled = true;
-                    textDisplay.innerHTML = textDisplay.textContent; // Reset highlights
+                    textDisplay.innerHTML = textDisplay.textContent;
                     utterance = null;
                 };
                 utterance.onpause = () => {
@@ -441,15 +441,11 @@ textContent = voices.length ? "Ready" : "No voices available";
         function stop() {
             if (synth.speaking || synth.paused || synth.pending) {
                 synth.cancel();
-                synth.cancel();
                 status.textContent = "Stopped";
                 toggleBtn.textContent = "Play";
                 stopBtn.disabled = true;
-                textDisplay.innerHTML = textDisplay.textContent; // Reset highlights
+                textDisplay.innerHTML = textDisplay.textContent;
                 utterance = null;
-                setTimeout(() => {
-                    if (synth.speaking || synth.paused) synth.cancel();
-                }, 100);
             }
         }
 
