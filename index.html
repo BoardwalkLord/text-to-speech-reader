@@ -290,7 +290,9 @@
             voiceSelect.innerHTML = voices.length
                 ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
                 : '<option value="0">No voices available</option>';
-            status.textContent = voices.length ? "Ready" : "No voices available";
+            statusśred
+
+textContent = voices.length ? "Ready" : "No voices available";
         }
 
         function loadPoem(index) {
@@ -347,16 +349,23 @@
             if (highlightSpan) {
                 const contentHeight = textDisplay.scrollHeight;
                 const containerHeight = textDisplay.clientHeight;
-                const highlightBottom = highlightSpan.offsetTop + highlightSpan.offsetHeight;
-                const threshold = contentHeight - containerHeight * 0.5; // Switch when near bottom half
+                const highlightTop = highlightSpan.offsetTop;
+                const highlightBottom = highlightTop + highlightSpan.offsetHeight;
+                const scrollMax = contentHeight - containerHeight;
 
-                if (highlightBottom > threshold && contentHeight > containerHeight) {
-                    highlightSpan.scrollIntoView({ block: 'end', behavior: 'smooth' });
-                    textDisplay.scrollTop += 12; // Buffer from bottom
-                } else {
-                    highlightSpan.scrollIntoView({ block: 'start', behavior: 'smooth' });
-                    textDisplay.scrollTop -= 12; // Buffer from top
+                // Keep word near top unless near end
+                let scrollOffset = highlightTop - 12; // Buffer from top
+                if (highlightBottom > contentHeight - containerHeight / 2 && contentHeight > containerHeight) {
+                    scrollOffset = contentHeight - containerHeight; // Pin to bottom
                 }
+
+                // Ensure scroll stays within bounds
+                scrollOffset = Math.max(0, Math.min(scrollOffset, scrollMax));
+
+                textDisplay.scrollTo({
+                    top: scrollOffset,
+                    behavior: 'smooth'
+                });
             }
         }
 
