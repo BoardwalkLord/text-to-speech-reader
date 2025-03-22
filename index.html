@@ -324,7 +324,7 @@
 
         const lineHeight = parseFloat(getComputedStyle(textDisplay).lineHeight) || 19.2;
         const visibleLines = Math.floor(textDisplay.clientHeight / lineHeight);
-        const scrollStep = lineHeight * (visibleLines - 2);
+        const scrollStep = lineHeight * (visibleLines - 3); // Scroll by 4 lines (e.g., 7 - 3)
 
         function highlightWord(charIndex) {
             const text = textDisplay.textContent;
@@ -353,7 +353,7 @@
                 const scrollMax = contentHeight - textDisplay.clientHeight;
                 const linesRemaining = Math.floor((contentHeight - (textDisplay.scrollTop + textDisplay.clientHeight)) / lineHeight);
 
-                if (currentLine >= visibleLines - 1 && currentLine > lastScrolledLine + (visibleLines - 3)) {
+                if (currentLine >= visibleLines && currentLine > lastScrolledLine + (visibleLines - 4)) {
                     const newScrollTop = textDisplay.scrollTop + scrollStep;
                     if (linesRemaining <= visibleLines) {
                         textDisplay.scrollTo({
@@ -379,7 +379,6 @@
                 if (speechSynthesis.onvoiceschanged !== undefined) {
                     speechSynthesis.onvoiceschanged = loadVoices;
                 }
-                // Retry multiple times to catch late-loading voices
                 let attempts = 0;
                 const maxAttempts = 5;
                 const retryInterval = setInterval(() => {
