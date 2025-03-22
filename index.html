@@ -349,19 +349,12 @@
                 const highlightBottom = highlightTop + highlightSpan.offsetHeight;
                 const scrollMax = contentHeight - containerHeight;
 
-                let scrollOffset;
-                if (highlightTop < textDisplay.scrollTop) {
-                    scrollOffset = highlightTop; // Scroll up to top if above
-                } else if (highlightBottom > textDisplay.scrollTop + containerHeight) {
-                    scrollOffset = highlightTop - containerHeight + highlightSpan.offsetHeight + 12; // Scroll down to keep in view
-                } else if (highlightBottom > contentHeight - containerHeight / 2 && contentHeight > containerHeight) {
+                let scrollOffset = highlightTop - 12; // Default: keep near top with buffer
+                if (highlightBottom > contentHeight - containerHeight / 2 && contentHeight > containerHeight) {
                     scrollOffset = contentHeight - containerHeight; // Pin to bottom near end
-                } else {
-                    return; // No scroll needed if already in view
                 }
 
                 scrollOffset = Math.max(0, Math.min(scrollOffset, scrollMax));
-                console.log('highlightTop:', highlightTop, 'scrollOffset:', scrollOffset, 'scrollTop:', textDisplay.scrollTop); //kwcw
                 textDisplay.scrollTo({
                     top: scrollOffset,
                     behavior: 'smooth'
