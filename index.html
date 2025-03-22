@@ -66,27 +66,15 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        button#toggleBtn {
-            background: #2ecc71;
-        }
-        button#stopBtn {
-            background: #e74c3c;
-        }
-        button#testVoiceBtn {
-            background: #9b59b6;
-            padding: 10px 20px;
-        }
+        button#toggleBtn { background: #2ecc71; }
+        button#stopBtn { background: #e74c3c; }
+        button#testVoiceBtn { background: #9b59b6; padding: 10px 20px; }
         button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
-        button:active:not(:disabled) {
-            transform: translateY(0);
-        }
-        button:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-        }
+        button:active:not(:disabled) { transform: translateY(0); }
+        button:disabled { background: #bdc3c7; cursor: not-allowed; }
         .controls {
             display: flex;
             flex-wrap: wrap;
@@ -113,14 +101,8 @@
             color: #34495e;
             margin-bottom: 5px;
         }
-        input[type="range"] {
-            width: 100%;
-            cursor: pointer;
-        }
-        span {
-            font-size: 14px;
-            color: #7f8c8d;
-        }
+        input[type="range"] { width: 100%; cursor: pointer; }
+        span { font-size: 14px; color: #7f8c8d; }
         #status {
             text-align: center;
             font-size: 14px;
@@ -231,7 +213,7 @@
                 ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
                 : '<option value="0">No voices available</option>';
             status.textContent = voices.length ? "Ready" : "No voices available";
-            console.log("Available voices:", voices.map(v => `${v.name} (${v.lang})`));
+            console.log("Loaded voices:", voices.map(v => `${v.name} (${v.lang}) - Default: ${v.default}`));
         }
 
         function loadPoem(index) {
@@ -245,15 +227,20 @@
                 status.textContent = "No voices available";
                 return;
             }
-            synth.cancel();
+            synth.cancel(); // Reset to ensure fresh state
+            const selectedVoice = voices[voiceSelect.value];
             const testUtterance = new SpeechSynthesisUtterance("Hello, this is a test of my voice!");
-            testUtterance.voice = voices[voiceSelect.value];
+            testUtterance.voice = selectedVoice;
             testUtterance.rate = parseFloat(rate.value);
             testUtterance.pitch = parseFloat(pitch.value);
             testUtterance.volume = parseFloat(volume.value);
-            testUtterance.onstart = () => status.textContent = "Testing voice...";
+            console.log("Testing voice:", selectedVoice.name, selectedVoice.lang);
+            testUtterance.onstart = () => status.textContent = "Testing " + selectedVoice.name + "...";
             testUtterance.onend = () => status.textContent = "Ready";
-            testUtterance.onerror = (e) => status.textContent = "Error: " + e.error;
+            testUtterance.onerror = (e) => {
+                status.textContent = "Error: " + e.error;
+                console.log("Test voice error:", e.error);
+            };
             synth.speak(testUtterance);
         }
 
