@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-to-Speech Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        h2 {
+            color: #2c3e50;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        textarea:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button#toggleBtn {
+            background: #2ecc71;
+        }
+        button#stopBtn {
+            background: #e74c3c;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .sliders {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        label {
+            font-size: 14px;
+            color: #34495e;
+            margin-bottom: 5px;
+        }
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+        span {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        #status {
+            text-align: center;
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 15px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Text-to-Speech Tool</h2>
+        <textarea id="textInput" placeholder="Type or paste your text here..."></textarea>
+        <select id="voiceSelect"></select>
+        <div class="controls">
+            <button id="toggleBtn">Play</button>
+            <button id="stopBtn" disabled>Stop</button>
+        </div>
+        <div class="sliders">
+            <div class="slider-container">
+                <label for="rate">Rate</label>
+                <input type="range" id="rate" min="0.1" max="2" step="0.1" value="1">
+                <span id="rateValue">1</span>
+            </div>
+            <div class="slider-container">
+                <label for="pitch">Pitch</label>
+                <input type="range" id="pitch" min="0" max="2" step="0.1" value="1">
+                <span id="pitchValue">1</span>
+            </div>
+            <div class="slider-container">
+                <label for="volume">Volume</label>
+                <input type="range" id="volume" min="0" max="1" step="0.1" value="1">
+                <span id="volumeValue">1</span>
+            </div>
+        </div>
+        <div id="status">Ready</div>
+    </div>
+
+    <script>
+        const synth = window.speechSynthesis;
+        const textInput = document.getElementById('textInput');
+        const voiceSelect = document.getElementById('voiceSelect');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const rate = document.getElementById('rate');
+        const pitch = document.getElementById('pitch');
+        const volume = document.getElementById('volume');
+        const rateValue = document.getElementById('rateValue');
+        const pitchValue = document.getElementById('pitchValue');
+        const volumeValue = document.getElementById('volumeValue');
+        const status = document.getElementById('status');
+        let utterance = null;
+
+        function loadVoices() {
+            const voices = synth.getVoices();
+            voiceSelect.innerHTML = voices.length
+                ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
+                : '<option value="0">No voices available</option>';
+            status.textContent = voices.length ? "Ready" : "No voices available";
+        }
+
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        rate.oninput = () => rateValue.textContent = rate.value;
+        pitch.oninput = () => pitchValue.textContent = pitch.value;
+        volume.oninput = () => volumeValue.textContent = volume.value;
+
+        function toggleSpeech() {
+            const text = textInput.value.trim();
+            if (!text) {
+                alert("Please enter some text!");
+                return;
+            }
+
+            const voices = synth.getVoices();
+            if (!voices.length) {
+                status.textContent = "No voices available";
+                return;
+            }
+
+            if (!synth.speaking && (!synth.paused || !utterance)) {
+                synth.cancel();
+                utterance = new SpeechSynthesisUtterance(text);
+                utterance.voice = voices[voiceSelect.value];
+                utterance.rate = parseFloat(rate.value);
+                utterance.pitch = parseFloat(pitch.value);
+                utterance.volume = parseFloat(volume.value);
+
+                utterance.onstart = () => {
+                    status.textContent = "Speaking...";
+                    toggleBtn.textContent = "Pause";
+                    stopBtn.disabled = false;
+                };
+                utterance.onend = () => {
+                    status.textContent = "Finished";
+                    toggleBtn.textContent = "Play";
+                    stopBtn.disabled = true;
+                    utterance = null;
+                };
+                utterance.onpause = () => {
+                    status.textContent = "Paused";
+                    toggleBtn.textContent = "Resume";
+                };
+                utterance.onresume = () => {
+                    status.textContent = "Speaking...";
+                    toggleBtn.textContent = "Pause";
+                };
+                utterance.onerror = (e) => {
+                    status.textContent = "Error: " + e.error;
+                    toggleBtn.textContent = "Play";
+                    stopBtn.disabled = true;
+                };
+
+                synth.speak(utterance);
+            } else if (synth.speaking && !synth.paused) {
+                synth.pause();
+            } else if (synth.paused && utterance) {
+                synth.resume();
+            }
+        }
+
+        function stop() {
+            if (synth.speaking || synth.paused || synth.pending) {
+                synth.cancel();
+                synth.cancel();
+                status.textContent = "Stopped";
+                toggleBtn.textContent = "Play";
+                stopBtn.disabled = true;
+                utterance = null;
+                setTimeout(() => {
+                    if (synth.speaking || synth.paused) synth.cancel();
+                }, 100);
+            }
+        }
+
+        toggleBtn.addEventListener('click', toggleSpeech);
+        stopBtn.addEventListener('click', stop);
+    </script>
+</body>
+</html>
