@@ -354,15 +354,15 @@
                 } else if (highlightBottom > contentHeight - containerHeight / 2) {
                     scrollOffset = contentHeight - containerHeight; // Pin to bottom near end
                 } else {
-                    scrollOffset = highlightTop - (containerHeight / 2) + (highlightSpan.offsetHeight / 2); // Center word
+                    scrollOffset = highlightTop - 12; // Keep near top with buffer
                 }
 
                 scrollOffset = Math.max(0, Math.min(scrollOffset, scrollMax));
-                console.log('highlightTop:', highlightTop, 'scrollOffset:', scrollOffset, 'scrollTop:', textDisplay.scrollTop, 'containerHeight:', containerHeight); //kwcw
                 textDisplay.scrollTo({
                     top: scrollOffset,
                     behavior: 'smooth'
                 });
+                console.log('highlightTop:', highlightTop, 'scrollOffset:', scrollOffset, 'scrollTop:', textDisplay.scrollTop, 'containerHeight:', containerHeight);
             }
         }
 
