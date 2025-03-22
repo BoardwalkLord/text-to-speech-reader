@@ -345,7 +345,7 @@
             // Scroll to highlighted word
             const highlightSpan = textDisplay.querySelector('.highlight');
             if (highlightSpan) {
-                const scrollOffset = highlightSpan.offsetTop - textDisplay.clientHeight / 2 + highlightSpan.offsetHeight / 2;
+                const scrollOffset = highlightSpan.offsetTop - 20; //highlightSpan.offsetTop - textDisplay.clientHeight / 2 + highlightSpan.offsetHeight / 2;
                 textDisplay.scrollTo({ top: scrollOffset, behavior: 'smooth' });
             }
         }
