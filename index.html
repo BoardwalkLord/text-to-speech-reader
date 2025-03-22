@@ -355,6 +355,7 @@
                 }
 
                 scrollOffset = Math.max(0, Math.min(scrollOffset, scrollMax));
+                console.log('highlightTop:', highlightTop, 'scrollOffset:', scrollOffset, 'scrollTop:', textDisplay.scrollTop, 'containerHeight:', containerHeight); //kwcw
                 textDisplay.scrollTo({
                     top: scrollOffset,
                     behavior: 'smooth'
