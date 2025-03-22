@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text-to-Speech Tool with Amateur ScrollSync</title>
+    <title>Text-to-Speech Tool</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -272,7 +272,6 @@
         const status = document.getElementById('status');
         let utterance = null;
         let voices = [];
-        let lastScrolledLine = 0;
 
         const poems = [
             "There once was a man from Peru.\nWho dreamed he was eating his shoe.\nHe woke up at night.\nWith a terrible fright.\nTo find out his dream had come true!",
@@ -292,7 +291,7 @@
             voiceSelect.innerHTML = voices.length
                 ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
                 : '<option value="0">No voices available</option>';
-            status.textContent = voices.length ? "Voices loaded" : "Waiting for voices...";
+            status.textContent = voices.length ? "Voices loaded" : "No voices available";
         }
 
         function loadPoem(index) {
@@ -302,7 +301,7 @@
 
         function testVoice() {
             if (!voices.length) {
-                status.textContent = "No voices available yet, try again soon";
+                status.textContent = "No voices available";
                 return;
             }
             synth.cancel();
@@ -322,13 +321,9 @@
             document.body.classList.toggle('dark');
         }
 
-        const lineHeight = parseFloat(getComputedStyle(textDisplay).lineHeight) || 19.2;
-        const visibleLines = Math.floor(textDisplay.clientHeight / lineHeight);
-        const scrollStep = lineHeight * (visibleLines - 3); // Scroll by 4 lines (e.g., 7 - 3)
-
         function highlightWord(charIndex) {
             const text = textDisplay.textContent;
-            const words = text.split(/(\s+)/);
+            const words = text.split(/(\s+)/); // Split by whitespace, preserve spaces
             let currentPos = 0;
 
             textDisplay.innerHTML = '';
@@ -344,54 +339,13 @@
                 }
                 currentPos += word.length;
             }
-
-            const highlightSpan = textDisplay.querySelector('.highlight');
-            if (highlightSpan) {
-                const highlightTop = highlightSpan.offsetTop;
-                const currentLine = Math.floor(highlightTop / lineHeight) + 1;
-                const contentHeight = textDisplay.scrollHeight;
-                const scrollMax = contentHeight - textDisplay.clientHeight;
-                const linesRemaining = Math.floor((contentHeight - (textDisplay.scrollTop + textDisplay.clientHeight)) / lineHeight);
-
-                if (currentLine >= visibleLines && currentLine > lastScrolledLine + (visibleLines - 4)) {
-                    const newScrollTop = textDisplay.scrollTop + scrollStep;
-                    if (linesRemaining <= visibleLines) {
-                        textDisplay.scrollTo({
-                            top: scrollMax,
-                            behavior: 'smooth'
-                        });
-                    } else {
-                        textDisplay.scrollTo({
-                            top: newScrollTop,
-                            behavior: 'smooth'
-                        });
-                    }
-                    lastScrolledLine = currentLine;
-                }
-
-                console.log('currentLine:', currentLine, 'scrollTop:', textDisplay.scrollTop, 'visibleLines:', visibleLines, 'linesRemaining:', linesRemaining, 'lastScrolledLine:', lastScrolledLine);
-            }
         }
 
         function initVoices() {
             loadVoices();
-            if (!voices.length) {
-                if (speechSynthesis.onvoiceschanged !== undefined) {
-                    speechSynthesis.onvoiceschanged = loadVoices;
-                }
-                let attempts = 0;
-                const maxAttempts = 5;
-                const retryInterval = setInterval(() => {
-                    loadVoices();
-                    attempts++;
-                    if (voices.length || attempts >= maxAttempts) {
-                        clearInterval(retryInterval);
-                        if (!voices.length) {
-                            status.textContent = "No voices found after retries. Check browser settings.";
-                            console.log("No voices available after", attempts, "attempts");
-                        }
-                    }
-                }, 1000);
+            if (!voices.length && speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+                setTimeout(loadVoices, 1000);
             }
         }
         initVoices();
@@ -408,13 +362,12 @@
             }
 
             if (!voices.length) {
-                status.textContent = "No voices available yet, try again soon";
+                status.textContent = "No voices available";
                 return;
             }
 
             if (!synth.speaking && (!synth.paused || !utterance)) {
                 synth.cancel();
-                lastScrolledLine = 0;
                 utterance = new SpeechSynthesisUtterance(text);
                 utterance.voice = voices[voiceSelect.value];
                 utterance.rate = parseFloat(rate.value);
