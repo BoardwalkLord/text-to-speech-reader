@@ -348,13 +348,11 @@
                 const highlightBottom = highlightTop + highlightSpan.offsetHeight;
                 const scrollMax = contentHeight - containerHeight;
 
-                let scrollOffset;
+                let scrollOffset = highlightTop - 12; // Default: near top
                 if (contentHeight <= containerHeight) {
-                    scrollOffset = 0; // No scroll if content fits
+                    scrollOffset = 0; // No scroll if fits
                 } else if (highlightBottom > contentHeight - containerHeight / 2) {
-                    scrollOffset = contentHeight - containerHeight; // Pin to bottom near end
-                } else {
-                    scrollOffset = highlightTop - 12; // Keep near top with buffer
+                    scrollOffset = contentHeight - containerHeight; // Pin to bottom
                 }
 
                 scrollOffset = Math.max(0, Math.min(scrollOffset, scrollMax));
@@ -362,7 +360,7 @@
                     top: scrollOffset,
                     behavior: 'smooth'
                 });
-                console.log('highlightTop:', highlightTop, 'scrollOffset:', scrollOffset, 'scrollTop:', textDisplay.scrollTop, 'containerHeight:', containerHeight);
+                console.log('highlightTop:', highlightTop, 'scrollOffset:', scrollOffset, 'scrollTop:', textDisplay.scrollTop, 'contentHeight:', contentHeight, 'scrollMax:', scrollMax);
             }
         }
 
