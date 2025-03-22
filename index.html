@@ -10,21 +10,34 @@
             max-width: 700px;
             margin: 0 auto;
             padding: 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
+            transition: background 0.5s, color 0.5s;
+        }
+        body.light {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2c3e50;
+        }
+        body.dark {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #ecf0f1;
         }
         h2 {
-            color: #2c3e50;
             font-weight: 600;
             text-align: center;
             margin-bottom: 20px;
         }
-        .container {
-            background: #fff;
+        .container, .poem-container {
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+            transition: background 0.5s, color 0.5s;
+        }
+        .light .container, .light .poem-container {
+            background: #fff;
+        }
+        .dark .container, .dark .poem-container {
+            background: #34495e;
         }
         textarea {
             width: 100%;
@@ -37,6 +50,8 @@
             box-sizing: border-box;
             transition: border-color 0.3s;
         }
+        .light textarea { background: #fff; color: #2c3e50; }
+        .dark textarea { background: #2c3e50; color: #ecf0f1; border-color: #7f8c8d; }
         textarea:focus {
             border-color: #3498db;
             outline: none;
@@ -53,9 +68,11 @@
             font-size: 16px;
             border: 2px solid #ddd;
             border-radius: 8px;
-            background: #fafafa;
             cursor: pointer;
+            transition: background 0.3s;
         }
+        .light select { background: #fafafa; }
+        .dark select { background: #3d566e; color: #ecf0f1; border-color: #7f8c8d; }
         button {
             padding: 12px 25px;
             font-size: 16px;
@@ -66,15 +83,22 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
-        button#toggleBtn { background: #2ecc71; }
-        button#stopBtn { background: #e74c3c; }
-        button#testVoiceBtn { background: #9b59b6; padding: 10px 20px; }
         button:hover:not(:disabled) {
-            transform: translateY(-2px);
+            transform: scale(1.05);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
-        button:active:not(:disabled) { transform: translateY(0); }
-        button:disabled { background: #bdc3c7; cursor: not-allowed; }
+        button:active:not(:disabled) {
+            transform: scale(0.95);
+            transition: transform 0.1s;
+        }
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        #toggleBtn { background: #2ecc71; }
+        #stopBtn { background: #e74c3c; }
+        #testVoiceBtn { background: #9b59b6; padding: 10px 20px; }
+        #themeToggle { background: #f1c40f; padding: 10px 20px; }
         .controls {
             display: flex;
             flex-wrap: wrap;
@@ -92,30 +116,39 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: #f9f9f9;
             padding: 10px;
             border-radius: 8px;
+            transition: background 0.3s;
         }
+        .light .slider-container { background: #f9f9f9; }
+        .dark .slider-container { background: #3d566e; }
         label {
             font-size: 14px;
-            color: #34495e;
             margin-bottom: 5px;
         }
-        input[type="range"] { width: 100%; cursor: pointer; }
-        span { font-size: 14px; color: #7f8c8d; }
+        .light label { color: #34495e; }
+        .dark label { color: #ecf0f1; }
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        input[type="range"]:hover {
+            transform: scale(1.02);
+        }
+        span {
+            font-size: 14px;
+        }
+        .light span { color: #7f8c8d; }
+        .dark span { color: #bdc3c7; }
         #status {
             text-align: center;
             font-size: 14px;
-            color: #7f8c8d;
             margin-top: 15px;
             font-style: italic;
         }
-        .poem-container {
-            background: #fff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
+        .light #status { color: #7f8c8d; }
+        .dark #status { color: #bdc3c7; }
         .poem-buttons {
             display: flex;
             flex-wrap: wrap;
@@ -128,9 +161,16 @@
             padding: 10px 15px;
             min-width: 40px;
         }
+        .theme-toggle {
+            text-align: center;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
-<body>
+<body class="light">
+    <div class="theme-toggle">
+        <button id="themeToggle">Dark Mode</button>
+    </div>
     <div class="container">
         <h2>Text-to-Speech Tool</h2>
         <textarea id="textInput" placeholder="Type or paste your text here..."></textarea>
@@ -185,6 +225,7 @@
         const toggleBtn = document.getElementById('toggleBtn');
         const stopBtn = document.getElementById('stopBtn');
         const testVoiceBtn = document.getElementById('testVoiceBtn');
+        const themeToggle = document.getElementById('themeToggle');
         const rate = document.getElementById('rate');
         const pitch = document.getElementById('pitch');
         const volume = document.getElementById('volume');
@@ -213,7 +254,6 @@
                 ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
                 : '<option value="0">No voices available</option>';
             status.textContent = voices.length ? "Ready" : "No voices available";
-            console.log("Loaded voices:", voices.map(v => `${v.name} (${v.lang}) - Default: ${v.default}`));
         }
 
         function loadPoem(index) {
@@ -227,21 +267,22 @@
                 status.textContent = "No voices available";
                 return;
             }
-            synth.cancel(); // Reset to ensure fresh state
-            const selectedVoice = voices[voiceSelect.value];
+            synth.cancel();
             const testUtterance = new SpeechSynthesisUtterance("Hello, this is a test of my voice!");
-            testUtterance.voice = selectedVoice;
+            testUtterance.voice = voices[voiceSelect.value];
             testUtterance.rate = parseFloat(rate.value);
             testUtterance.pitch = parseFloat(pitch.value);
             testUtterance.volume = parseFloat(volume.value);
-            console.log("Testing voice:", selectedVoice.name, selectedVoice.lang);
-            testUtterance.onstart = () => status.textContent = "Testing " + selectedVoice.name + "...";
+            testUtterance.onstart = () => status.textContent = "Testing voice...";
             testUtterance.onend = () => status.textContent = "Ready";
-            testUtterance.onerror = (e) => {
-                status.textContent = "Error: " + e.error;
-                console.log("Test voice error:", e.error);
-            };
+            testUtterance.onerror = (e) => status.textContent = "Error: " + e.error;
             synth.speak(testUtterance);
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light');
+            document.body.classList.toggle('dark');
+            themeToggle.textContent = document.body.classList.contains('dark') ? "Light Mode" : "Dark Mode";
         }
 
         loadVoices();
@@ -324,6 +365,7 @@
         toggleBtn.addEventListener('click', toggleSpeech);
         stopBtn.addEventListener('click', stop);
         testVoiceBtn.addEventListener('click', testVoice);
+        themeToggle.addEventListener('click', toggleTheme);
     </script>
 </body>
 </html>
