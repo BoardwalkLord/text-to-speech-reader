@@ -272,6 +272,7 @@
         const status = document.getElementById('status');
         let utterance = null;
         let voices = [];
+        let lastScrolledLine = 0;
 
         const poems = [
             "There once was a man from Peru.\nWho dreamed he was eating his shoe.\nHe woke up at night.\nWith a terrible fright.\nTo find out his dream had come true!",
@@ -291,7 +292,7 @@
             voiceSelect.innerHTML = voices.length
                 ? voices.map((voice, index) => `<option value="${index}">${voice.name} (${voice.lang})</option>`).join('')
                 : '<option value="0">No voices available</option>';
-            status.textContent = voices.length ? "Voices loaded" : "No voices available";
+            status.textContent = voices.length ? "Voices loaded" : "Waiting for voices...";
         }
 
         function loadPoem(index) {
@@ -301,7 +302,7 @@
 
         function testVoice() {
             if (!voices.length) {
-                status.textContent = "No voices available";
+                status.textContent = "No voices available yet, try again soon";
                 return;
             }
             synth.cancel();
@@ -321,14 +322,13 @@
             document.body.classList.toggle('dark');
         }
 
-        // Calculate line height and visible lines once
-        const lineHeight = parseFloat(getComputedStyle(textDisplay).lineHeight) || 19.2; // Default 1.2 * 16px
+        const lineHeight = parseFloat(getComputedStyle(textDisplay).lineHeight) || 19.2;
         const visibleLines = Math.floor(textDisplay.clientHeight / lineHeight);
-        const scrollStep = lineHeight * (visibleLines - 2); // Scroll by visibleLines - 2 (e.g., 8 if 10 lines)
+        const scrollStep = lineHeight * (visibleLines - 2);
 
         function highlightWord(charIndex) {
             const text = textDisplay.textContent;
-            const words = text.split(/(\s+)/); // Split by whitespace, preserve spaces
+            const words = text.split(/(\s+)/);
             let currentPos = 0;
 
             textDisplay.innerHTML = '';
@@ -348,17 +348,13 @@
             const highlightSpan = textDisplay.querySelector('.highlight');
             if (highlightSpan) {
                 const highlightTop = highlightSpan.offsetTop;
-                const currentLine = Math.floor(highlightTop / lineHeight) + 1; // 1-based line number
+                const currentLine = Math.floor(highlightTop / lineHeight) + 1;
                 const contentHeight = textDisplay.scrollHeight;
                 const scrollMax = contentHeight - textDisplay.clientHeight;
+                const linesRemaining = Math.floor((contentHeight - (textDisplay.scrollTop + textDisplay.clientHeight)) / lineHeight);
 
-                // Amateur ScrollSync logic
-                if (currentLine >= visibleLines - 1) { // Before hitting line 10 (e.g., at line 9)
+                if (currentLine >= visibleLines - 1 && currentLine > lastScrolledLine + (visibleLines - 3)) {
                     const newScrollTop = textDisplay.scrollTop + scrollStep;
-                    const lastLine = Math.floor(contentHeight / lineHeight);
-                    const linesRemaining = lastLine - Math.floor((textDisplay.scrollTop + textDisplay.clientHeight) / lineHeight);
-
-                    // Final pagedown: ensure last line lands on line 10
                     if (linesRemaining <= visibleLines) {
                         textDisplay.scrollTo({
                             top: scrollMax,
@@ -370,15 +366,33 @@
                             behavior: 'smooth'
                         });
                     }
+                    lastScrolledLine = currentLine;
                 }
+
+                console.log('currentLine:', currentLine, 'scrollTop:', textDisplay.scrollTop, 'visibleLines:', visibleLines, 'linesRemaining:', linesRemaining, 'lastScrolledLine:', lastScrolledLine);
             }
         }
 
         function initVoices() {
             loadVoices();
-            if (!voices.length && speechSynthesis.onvoiceschanged !== undefined) {
-                speechSynthesis.onvoiceschanged = loadVoices;
-                setTimeout(loadVoices, 1000);
+            if (!voices.length) {
+                if (speechSynthesis.onvoiceschanged !== undefined) {
+                    speechSynthesis.onvoiceschanged = loadVoices;
+                }
+                // Retry multiple times to catch late-loading voices
+                let attempts = 0;
+                const maxAttempts = 5;
+                const retryInterval = setInterval(() => {
+                    loadVoices();
+                    attempts++;
+                    if (voices.length || attempts >= maxAttempts) {
+                        clearInterval(retryInterval);
+                        if (!voices.length) {
+                            status.textContent = "No voices found after retries. Check browser settings.";
+                            console.log("No voices available after", attempts, "attempts");
+                        }
+                    }
+                }, 1000);
             }
         }
         initVoices();
@@ -395,12 +409,13 @@
             }
 
             if (!voices.length) {
-                status.textContent = "No voices available";
+                status.textContent = "No voices available yet, try again soon";
                 return;
             }
 
             if (!synth.speaking && (!synth.paused || !utterance)) {
                 synth.cancel();
+                lastScrolledLine = 0;
                 utterance = new SpeechSynthesisUtterance(text);
                 utterance.voice = voices[voiceSelect.value];
                 utterance.rate = parseFloat(rate.value);
